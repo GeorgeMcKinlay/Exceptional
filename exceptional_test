@@ -1,0 +1,20 @@
+os.unloadAPI("exceptional")
+os.loadAPI("exceptional")
+
+--# Adds the API functions to the global table for ease of use.
+exceptional.init(_G)
+
+try {
+	function()
+		--# Throw is just a fancy name for the error function. Both work.
+		throw "Oh no, it doesn't work!"
+	end
+} :catch {
+	function(err, line, chunk)
+		printError("There was an error at line " .. line .. " in chunk \"" .. chunk .. "\"!")
+		printError("Details: " .. err)
+	end
+}
+
+--# Removes the API functions again.
+exceptional.cleanup(_G)

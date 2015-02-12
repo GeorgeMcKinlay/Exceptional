@@ -1,0 +1,76 @@
+local function getErrorData(errString)
+	local all, chunk, line, text = errString:match("^((.+):(%d+):%s(.+))$")
+	if all ~= nil then
+		--# It's a regular Lua error.
+		return text, line, chunk
+	else
+		--# Don't know how to handle it...
+		return errString
+	end
+end
+
+function init(env)
+	env["try"] = function(f)
+		if f == nil then
+			error("throw argument couldn't be resolved to a function!", 2)
+		end
+
+		local firstErr = nil
+
+		if type(f) == "function" then
+			local ok, err = pcall(f)
+			if not ok then
+				firstErr = err
+			end
+		elseif type(f) == "table" then
+			for _,v in pairs(f) do
+				local ok, err = pcall(v)
+				if not ok then
+					firstErr = err
+					break
+				end
+			end
+		end
+
+		if firstErr ~= nil then
+			--# There was an error!
+			return {
+				catch = function(self, catchFunc)
+					if (type(self) == "function" or type(self) == "table") and catchFunc == nil then
+						catchFunc = self
+					end
+
+					if type(catchFunc) == "table" then
+						for _,v in pairs(catchFunc) do
+							if type(v) == "function" then
+								catchFunc = v
+								break
+							end
+						end
+					end
+
+					if type(catchFunc) ~= "function" then
+						error("catch argument couldn't be resolved to a function!", 2)
+						return
+					end
+
+					catchFunc(getErrorData(firstErr))
+				end
+			}
+		else
+			--# Don't care...
+			return {
+				catch = function() end
+			}
+		end
+	end
+
+	env["throw"] = function(msg)
+		error(msg, 2)
+	end
+end
+
+function cleanup(env)
+	env["try"] = nil
+	env["throw"] = nil
+end
