@@ -1,9 +1,6 @@
 os.unloadAPI(shell.resolve("exceptional"))
 os.loadAPI(shell.resolve("exceptional"))
 
---# Adds the API functions to the global table for ease of use.
-exceptional.init(_G)
-
 try {
 	function()
 		--# Is handled.
@@ -40,6 +37,3 @@ try {
 		printError("Caught exception of type " .. e.Type .. " on line " .. e.Line .. " in chunk \"" .. e.Chunk .. "\"!")
 	end
 }
-
---# Removes the API functions again.
-exceptional.cleanup(_G)
