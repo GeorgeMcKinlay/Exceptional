@@ -1,18 +1,43 @@
-os.unloadAPI("exceptional")
-os.loadAPI("exceptional")
+os.unloadAPI(shell.resolve("exceptional"))
+os.loadAPI(shell.resolve("exceptional"))
 
 --# Adds the API functions to the global table for ease of use.
 exceptional.init(_G)
 
 try {
 	function()
-		--# Throw is just a fancy name for the error function. Both work.
-		throw "Oh no, it doesn't work!"
+		--# Is handled.
+		throw {
+			Type = "ItDoesntWorkError",
+			WhatDoesntWork = "It just doesn't work!"
+		}
+
+		--# These aren't actually called because throw terminates the function.
+		--# Throws a LuaError.
+		error("Some boring error.")
+
+		--# Is caught by the catch statement because it's unhandled.
+		throw {
+			Type = "SomeException"
+		}
+
+		--# If an exception doesn't have a handler and there is no catch statement,
+		--# the exception is suppressed completely.
+	end
+} :LuaError {
+	function(e)
+		--# e is the exception table
+		printError("There was an error on line " .. e.Line .. " in chunk \"" .. e.Chunk .. "\"!")
+		printError("Details: " .. e.Message)
+	end
+} :ItDoesntWorkError {
+	function(e)
+		printError("It doesn't work on line " .. e.Line .. " in chunk \"" .. e.Chunk .. "\"!")
+		printError("Details: " .. e.WhatDoesntWork)
 	end
 } :catch {
-	function(err, line, chunk)
-		printError("There was an error at line " .. line .. " in chunk \"" .. chunk .. "\"!")
-		printError("Details: " .. err)
+	function(e)
+		printError("Caught exception of type " .. e.Type .. " on line " .. e.Line .. " in chunk \"" .. e.Chunk .. "\"!")
 	end
 }
 
